@@ -100,11 +100,11 @@ contract SevenLoop is ERC20Detailed, Ownable {
             address(this)
         );
 
-        autoLiquidityReceiver = 0x0;
-        treasuryReceiver = 0x0;
-        sevenLoopInsuranceFundReceiver = 0x0;
-        lotteryReceiver = 0x0;
-        darkHole = 0x0;
+        autoLiquidityReceiver = 0xC1da947bE6928A5e0Cc156C13204C5EebC0748c6;
+        treasuryReceiver = 0x95d9089428AC9BFD432F05b1c84a69b248350b99;
+        sevenLoopInsuranceFundReceiver = 0x647B8E39275B3aEa564380cb6040Bbc69Cf21050;
+        lotteryReceiver = 0xA7147ccfE5843441f69c5fC7B59394E9dC8b0D13;
+        darkHole = 0xDCb9fE0eBd63c5171ac6221409047c555515A265;
 
         _allowedFragments[address(this)][address(router)] = uint256(-1);
         pairAddress = pair;
