@@ -14,15 +14,21 @@ contract SevenLoop is ERC20Detailed, Ownable {
 
     event LogRebase(uint256 indexed epoch, uint256 totalSupply);
 
-    string public _name = "Seven Loop";
+    string public _name = "SevenLoop";
     string public _symbol = "SELO";
     uint8 public _decimals = 5;
 
     IPancakeSwapPair public pairContract;
     mapping(address => bool) _isFeeExempt;
+    mapping(address => bool) public _operators;
 
     modifier validRecipient(address to) {
         require(to != address(0x0));
+        _;
+    }
+
+    modifier onlyOperator() {
+        require(_operators[msg.sender], "Forbidden");
         _;
     }
 
@@ -85,7 +91,7 @@ contract SevenLoop is ERC20Detailed, Ownable {
     mapping(address => bool) public blacklist;
 
     constructor()
-        ERC20Detailed("Seven Loop", "SELO", uint8(DECIMALS))
+        ERC20Detailed("SevenLoop", "SELO", uint8(DECIMALS))
         Ownable()
     {
         router = IPancakeSwapRouter(0x10ED43C718714eb63d5aA57B78B54704E256024E);
@@ -113,12 +119,13 @@ contract SevenLoop is ERC20Detailed, Ownable {
         _autoAddLiquidity = false;
         _isFeeExempt[treasuryReceiver] = true;
         _isFeeExempt[address(this)] = true;
+        _operators[msg.sender] = true;
 
         _transferOwnership(treasuryReceiver);
         emit Transfer(address(0x0), treasuryReceiver, _totalSupply);
     }
 
-    function forceRebase() external onlyOwner {
+    function forceRebase() external onlyOperator {
         if (shouldRebase()) {
             rebase();
         }
@@ -265,6 +272,12 @@ contract SevenLoop is ERC20Detailed, Ownable {
         return gonAmount.sub(feeAmount);
     }
 
+    function forceAddLiquidity() external onlyOperator {
+        if (shouldAddLiquidity()) {
+            addLiquidity();
+        }
+    }
+
     function addLiquidity() internal swapping {
         uint256 autoLiquidityAmount = _gonBalances[autoLiquidityReceiver].div(
             _gonsPerFragment
@@ -308,7 +321,7 @@ contract SevenLoop is ERC20Detailed, Ownable {
         _lastAddLiquidityTime = block.timestamp;
     }
 
-    function lotteryPayouts(address[] calldata addrs) external onlyOwner {
+    function lotteryPayouts(address[] calldata addrs) external onlyOperator {
         require(addrs.length > 0, "Invalid addrs");
         uint256 lotteryAmount = _gonBalances[lotteryReceiver];
         uint256 amountPerAddr = lotteryAmount.div(addrs.length);
@@ -538,7 +551,7 @@ contract SevenLoop is ERC20Detailed, Ownable {
 
     function setBotBlacklist(address _botAddress, bool _flag)
         external
-        onlyOwner
+        onlyOperator
     {
         require(
             isContract(_botAddress),
@@ -571,7 +584,20 @@ contract SevenLoop is ERC20Detailed, Ownable {
         return size > 0;
     }
 
+    function setOperator(address operatorAddress, bool value)
+        external
+        onlyOwner
+    {
+        require(
+            operatorAddress != address(0),
+            "operatorAddress is zero address"
+        );
+        _operators[operatorAddress] = value;
+        emit OperatorSetted(operatorAddress, value);
+    }
+
     receive() external payable {}
 
     event LotteryPayouts(address[] indexed addrs, uint256 amount);
+    event OperatorSetted(address operatorAddress, bool value);
 }
