@@ -118,6 +118,12 @@ contract SevenLoop is ERC20Detailed, Ownable {
         emit Transfer(address(0x0), treasuryReceiver, _totalSupply);
     }
 
+    function forceRebase() external onlyOwner {
+        if (shouldRebase()) {
+            rebase();
+        }
+    }
+
     function rebase() internal {
         if (inSwap) return;
         uint256 rebaseRate;
